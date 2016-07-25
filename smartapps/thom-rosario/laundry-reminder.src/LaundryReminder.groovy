@@ -34,7 +34,7 @@ preferences {
       input("washerContact", "capability.contactSensor", title: "Pick the sensor", required: true, multiple: false)
     }
 	section("How long is your typical wash cycle?") {
-		input ("normalWashLength", "text", title:"How many minutes does your laundry take?", required: true, defaultValue: "15")
+		input ("normalWashLength", "number", title:"How many minutes does your laundry take?", required: true, defaultValue: "15")
 	}
 	section("What time do you want to be notified?") {
 		input("notifyTime", "time", title: "Enter a time to be notified.", required: true)
@@ -61,48 +61,36 @@ def updated() {
 def initialize() {
 	subscribe(washerContact, "contact", washerHandler)
 	schedule(notifyTime, notificationHandler)
-	//def cycleMinutes = normalWashLength * minutes
 	log.debug "Set washer cycle time to $normalWashLength minutes."
 }
 
 def washerHandler(evt) {
-    state.washDay = true // debugging 
-    if (evt.value == "open") {
-      // contact was opened, must be doing laundry.  Need to time it.
-      log.debug "Contact is ${evt.value} -- going to check motion in $normalWashLength minutes."
-	  //state.startDate = evt.date.time
-	  //log.debug "state.startDate = ${state.startDate}"
-	  runIn(normalWashLength * minutes, checkMotion)
-  }
-  else {
-      // contact was closed, make note of the time and tell the app to run later and check how long we ran
-      log.debug "Contact is ${evt.value}"
-	  //state.stopDate = evt.date.time
-	  //log.debug "state.stopDate = ${state.stopDate}"
-	  /*
-	  def washLength = state.stopDate - state.startDate
-	  if (washLength ≥ normalWashLength) {
-		  state.washDay = true
-	  } 
-	  else {		  
-		  // the movement wasn't long enough to be considered a wash day
-		  log.debug "Movement stopped, but was shorter than a wash cycle.  washLength = $washLength and normalWashLength = $normalWashLength"
-	  }	*/
-   }
+	if (state.washDay == false) {
+		// we haven't done laundry today; better check.  if it's true, then we already know to send the notification
+	    if (evt.value == "open") {
+	      log.debug "Contact is ${evt.value} -- going to check motion in $normalWashLength minutes."
+		  runIn(60  * normalWashLength, checkMotion)
+	  }
+	  else {
+	      // contact was closed, make note of the time and tell the app to run later and check how long we ran
+	      log.debug "Contact is ${evt.value}"
+	   }
+	}
 }
 
 def checkMotion() {
 	// running via schedule to see if the washer's still running.
-    log.debug "In checkMotion scheduled method"
-	def laundryState = washerContact.currentState("contact")
-	if (laundryState == "open") {
+    log.debug "In checkMotion scheduled method."
+    def currentState = washerContact.currentContact
+    log.debug "washerContact current state = $currentState"
+	if (currentState == "open") {
 		/* 
 			This handler's called after the user-defined amount of time has passed.  The assumption is that
 			if we're in this handler and the contact's open again, it's most likely an active wash cycle.  It's
 			possible that the movement could have been two distinct temporary motions, but that's an edge case
 			that I'm willing to discount for our purposes.
 		*/
-		log.debug "Movement's still going after $normalWashLength minutes."
+		log.debug "Movement's still going after $normalWashLength minutes; setting washDay to true."
 		state.washDay = true
 	}
 	else {
@@ -112,9 +100,11 @@ def checkMotion() {
 }
 
 def notificationHandler(evt) {
-	// this is where I'll decide how to handle what happens at the user's specified time
+	// this is where I'll decide how to handle what happens at the user's specified notification time
 	log.debug "We're inside the notification handler."
 	if (state.washDay) then {
+		log.debug "Did laundry today --> washDay = $state.washDay"
+		/*
 		if (location.contactBookEnabled && recipients) {
 			log.debug "Contact Book enabled!"
 		    sendNotificationToContacts("Don't forget to check the washer.", recipients)
@@ -124,6 +114,7 @@ def notificationHandler(evt) {
 			log.debug "Contact Book not enabled."
 		    sendSms(phone, "Don't forget to check the washer.")
 		}
+		*/
 		state.washDay = false // resetting the flag for tomorrow
 	} 
 	else {
