@@ -61,22 +61,25 @@ def updated() {
 def initialize() {
 	subscribe(washerContact, "contact", washerHandler)
 	schedule(notifyTime, notificationHandler)
-	def cycleMinutes = normalWashLength * minutes
-	log.debug "Set washer cycle time to $cycleMinutes minutes."
+	//def cycleMinutes = normalWashLength * minutes
+	log.debug "Set washer cycle time to $normalWashLength minutes."
 }
 
 def washerHandler(evt) {
+    state.washDay = true // debugging 
     if (evt.value == "open") {
       // contact was opened, must be doing laundry.  Need to time it.
-      log.debug "Contact is ${evt.value}"
-	  state.startDate = now()
-	  log.debug "state.startDate = ${state.startDate}"
+      log.debug "Contact is ${evt.value} -- going to check motion in $normalWashLength minutes."
+	  //state.startDate = evt.date.time
+	  //log.debug "state.startDate = ${state.startDate}"
+	  runIn(normalWashLength * minutes, checkMotion)
   }
   else {
       // contact was closed, make note of the time and tell the app to run later and check how long we ran
       log.debug "Contact is ${evt.value}"
-	  state.stopDate = now()
-	  log.debug "state.stopDate = ${state.stopDate}"
+	  //state.stopDate = evt.date.time
+	  //log.debug "state.stopDate = ${state.stopDate}"
+	  /*
 	  def washLength = state.stopDate - state.startDate
 	  if (washLength ≥ normalWashLength) {
 		  state.washDay = true
@@ -84,8 +87,28 @@ def washerHandler(evt) {
 	  else {		  
 		  // the movement wasn't long enough to be considered a wash day
 		  log.debug "Movement stopped, but was shorter than a wash cycle.  washLength = $washLength and normalWashLength = $normalWashLength"
-	  }		  
+	  }	*/
    }
+}
+
+def checkMotion() {
+	// running via schedule to see if the washer's still running.
+    log.debug "In checkMotion scheduled method"
+	def laundryState = washerContact.currentState("contact")
+	if (laundryState == "open") {
+		/* 
+			This handler's called after the user-defined amount of time has passed.  The assumption is that
+			if we're in this handler and the contact's open again, it's most likely an active wash cycle.  It's
+			possible that the movement could have been two distinct temporary motions, but that's an edge case
+			that I'm willing to discount for our purposes.
+		*/
+		log.debug "Movement's still going after $normalWashLength minutes."
+		state.washDay = true
+	}
+	else {
+		// The contact's closed; must have been a temporary movement; doesn't count as a cycle.
+		log.debug "Movement ended without reaching a full cycle; doesn't count."
+	}
 }
 
 def notificationHandler(evt) {
