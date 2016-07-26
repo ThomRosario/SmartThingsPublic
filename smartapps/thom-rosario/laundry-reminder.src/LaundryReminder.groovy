@@ -41,9 +41,8 @@ preferences {
 	}
 	section("Who do you want to notify?") {
 		input("recipients", "contact", title: "Send notifications to") {
-            input "phone", "phone", title: "Send with text message (optional)",
-                description: "Phone Number", required: false
-			}
+            input "phone", "phone", title: "Send with text message (optional)", description: "Phone Number", required: false
+		}
 	}
 }
 
@@ -59,30 +58,26 @@ def updated() {
 }
 
 def initialize() {
-	subscribe(washerContact, "contact", washerHandler)
+	subscribe(washerContact, "contact", motionHandler)
 	schedule(notifyTime, notificationHandler)
-	log.debug "Set washer cycle time to $normalWashLength minutes."
+	log.debug "Washer cycle time set to $normalWashLength minutes; washDay = $state.washDay"
 }
 
-def washerHandler(evt) {
+def motionHandler(evt) {
+	log.debug "Entered motionHandler.  washDay = $state.washDay and the contact is ${evt.value}"
 	if (state.washDay == false) {
 		// we haven't done laundry today; better check.  if it's true, then we already know to send the notification
 	    if (evt.value == "open") {
 	      log.debug "Contact is ${evt.value} -- going to check motion in $normalWashLength minutes."
 		  runIn(60  * normalWashLength, checkMotion)
 	  }
-	  else {
-	      // contact was closed, make note of the time and tell the app to run later and check how long we ran
-	      log.debug "Contact is ${evt.value}"
-	   }
 	}
 }
 
 def checkMotion() {
 	// running via schedule to see if the washer's still running.
-    log.debug "In checkMotion scheduled method."
     def currentState = washerContact.currentContact
-    log.debug "washerContact current state = $currentState"
+    log.debug "In checkMotion scheduled method.  washDay = $state.washDay and the contact is $currentState"
 	if (currentState == "open") {
 		/* 
 			This handler's called after the user-defined amount of time has passed.  The assumption is that
@@ -93,18 +88,13 @@ def checkMotion() {
 		log.debug "Movement's still going after $normalWashLength minutes; setting washDay to true."
 		state.washDay = true
 	}
-	else {
-		// The contact's closed; must have been a temporary movement; doesn't count as a cycle.
-		log.debug "Movement ended without reaching a full cycle; doesn't count."
-	}
 }
 
-def notificationHandler(evt) {
+def notificationHandler() {
 	// this is where I'll decide how to handle what happens at the user's specified notification time
-	log.debug "We're inside the notification handler."
-	if (state.washDay) then {
-		log.debug "Did laundry today --> washDay = $state.washDay"
-		/*
+	log.debug "We're inside the notification handler.  washDay = $state.washDay"
+	if (state.washDay) {
+		log.debug "Did laundry today --> washDay = $state.washDay"				
 		if (location.contactBookEnabled && recipients) {
 			log.debug "Contact Book enabled!"
 		    sendNotificationToContacts("Don't forget to check the washer.", recipients)
@@ -114,11 +104,6 @@ def notificationHandler(evt) {
 			log.debug "Contact Book not enabled."
 		    sendSms(phone, "Don't forget to check the washer.")
 		}
-		*/
 		state.washDay = false // resetting the flag for tomorrow
 	} 
-	else {
-		// didn't do any wash today; nothing todo today.
-		log.debug "Didn't do any wash today.  state.washDay = $state.WashDay"
-	}
 }
