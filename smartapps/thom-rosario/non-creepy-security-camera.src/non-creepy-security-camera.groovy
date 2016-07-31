@@ -3,10 +3,10 @@
  *  Version 1.0
  *  Copyright 2016 Thom Rosario
  *  Based on 
- *  "Foscam Mode Alarm"     Copyright 2014 skp19 and
- *  "Photo Burst When..."   Copyright 2013 SmartThings
+ *  "Foscam Mode Alarm" and "Foscam Presence Alarm"     Copyright 2014 skp19 and
+ *  "Photo Burst When..."   							Copyright 2013 SmartThings
  *
- *  I wanted a non-creepy security camera that would avert it's eyes while I was home.
+ *  I wanted a non-creepy security camera that would avert it's eyes while I was home.  It also enables/disables the camera motion detection.
  *  https://youtu.be/jHsbwY4EPyA?t=25
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -24,45 +24,50 @@ definition(
     namespace: "Thom Rosario",
     author: "Thom Rosario",
     category: "Safety & Security",
-    description: "Using the Foscam Universal Device Handler created by skp19, this smart app moves your camera to a preset position based on SmartThings Routine activations",
+    description: "Using the Foscam Universal Device Handler created by skp19, this smart app moves your camera to a preset position based on different events.",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Solution/camera.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Solution/camera@2x.png"
 )
 
 preferences {
-	section("When the mode changes to...") {
-		input ("alarmMode", "mode", multiple: true, title:"Which mode?")
+	section("When this happens...") {
+		input ("stMode", "mode", multiple: true, title:"This mode activates")
+        input "presence", "capability.presenceSensor", title: "These people are present", required: false, multiple: true
 	}
-    section("Move this camera...") {
+    section("Do these things...") {
+		input ("newPosition", "number", title:"Where should I move?", required: true, defaultValue: "3")
+		input ("origPosition", "number", title: "Where should I return to when I'm done?", required: true, defaultValue: "1")
+	}
+    section("To these cameras"){
 		input ("camera", "capability.imageCapture", multiple: true, title:"Which camera?")
-	}
-	section("To this preset...") {
-		input ("newPosition", "text", title:"Which preset position?", required: true, defaultValue: "3")
-	}
-	section("... and return to this position...") {
-		input ("origPosition", "text", title: "Which preset position?", required: false, defaultValue: "1")
-	}
+    }
 }
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
-	subscribeToEvents()
+	init()
 }
 
 def updated() {
 	log.debug "Updated with settings: ${settings}"
 	unsubscribe()
-	subscribeToEvents()
+	init()
 }
 
-def subscribeToEvents() {
-    subscribe(location, "mode", modeAlarmHandler)
+def init() {
+    subscribe(location, "mode", moveHandler)
+	subscribe(presence, "presence", moveHandler)
 }
 
-def modeAlarmHandler(evt) {
-	log.debug "Mode changed to ${evt.value}."
-    if (evt.value in alarmMode) {
-        log.debug "Moving to position $newPosition"
+def moveHandler(evt) {
+	log.debug "moveHandler: event = ${evt.value}."
+	def nobodyHome = presence.find{it.currentPresence == "present"} == null
+	def somebodyHome = presence.find{it.currentPresence == "present"}
+	log.debug "moveHandler: Presence -- nobodyHome = ${nobodyHome} & somebodyHome = ${somebodyHome}"
+	camera?.ledAuto() // set the camera to auto IR mode in case it's not enabled
+    if (evt.value in stMode || somebodyHome) {
+        log.debug "moveHandler:  moving to position $newPosition & disabling alarm"
+    	camera?.alarmOff()
 		switch (newPosition) {
 		    case "1":
 		        camera?.preset1()
@@ -73,12 +78,21 @@ def modeAlarmHandler(evt) {
 		    case "3":
 		        camera?.preset3()
 		        break
+		    case "4":
+		        camera?.preset4()
+		        break
+		    case "5":
+		        camera?.preset6()
+		        break
+		    case "6":
+		        camera?.preset6()
+		        break
 		    default:
 		        camera?.preset3()
 		}		
     }
     else {
-        log.debug "Returning to position $origPosition"
+        log.debug "moveHandler:  Returning to position $origPosition"
 		switch (origPosition) {
 		    case "1":
 		        camera?.preset1()
@@ -89,8 +103,19 @@ def modeAlarmHandler(evt) {
 		    case "3":
 		        camera?.preset3()
 		        break
+		    case "4":
+		        camera?.preset4()
+		        break
+		    case "5":
+		        camera?.preset6()
+		        break
+		    case "6":
+		        camera?.preset6()
+		        break
 		    default:
 		        camera?.preset1()
-		}		
+		}
+    	camera?.alarmOn()
+        log.debug "moveHandler:  turning alarm back on"
     }
 }
