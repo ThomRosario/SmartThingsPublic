@@ -37,6 +37,10 @@ preferences {
     section("Do these things...") {
 		input ("newPosition", "number", title:"Where should I move?", required: true, defaultValue: "3")
 		input ("origPosition", "number", title: "Where should I return to when I'm done?", required: true, defaultValue: "1")
+		input("recipients", "contact", title: "Who should I notify?") {
+            input "phone", "phone", title: "Send with text message (optional)",
+                description: "Phone Number", required: false
+			}
 	}
     section("To these cameras"){
 		input ("camera", "capability.imageCapture", multiple: true, title:"Which camera?")
@@ -55,8 +59,30 @@ def updated() {
 }
 
 def init() {
+	log.debug "Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentPresence}}"
     subscribe(location, "mode", moveHandler)
 	subscribe(presence, "presence", moveHandler)
+}
+
+def modeHandler(evt) {
+	// handle mode changes
+}
+
+def presenceHandler(evt) {
+	// handle presence mode changes
+}
+
+def notificationHandler(msg) {
+	// handle notifications
+	if (location.contactBookEnabled && recipients) {
+		log.debug "Contact Book enabled!"
+	    sendNotificationToContacts(msg, recipients)
+	} 
+    else if (phone) { 
+    	// check that the user did select a phone number
+		log.debug "Contact Book not enabled."
+	    sendSms(phone, msg)
+	}
 }
 
 def moveHandler(evt) {
@@ -89,8 +115,10 @@ def moveHandler(evt) {
 		        break
 		    default:
 		        camera?.preset3()
-		}		
-    }
+		} // end of switch
+		
+		notificationHandler("Averting our eyes, oh lord!  Camera: ${camera} is moving to position ${settings.newPosition} & alarm is off.")
+    } // end of handling no-one home
     else {
         log.debug "moveHandler:  Returning to position $origPosition"
 		switch (origPosition) {
@@ -117,5 +145,6 @@ def moveHandler(evt) {
 		}
     	camera?.alarmOn()
         log.debug "moveHandler:  turning alarm back on"
+		notificationHandler("Keeping an eye on things!  Camera: ${camera} is moving to position ${settings.origPosition} & alarm is on.")
     }
 }
