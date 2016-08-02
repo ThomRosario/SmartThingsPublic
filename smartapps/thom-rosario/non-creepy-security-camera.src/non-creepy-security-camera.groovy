@@ -49,6 +49,7 @@ preferences {
 
 def installed() {
 	log.debug "Installed with settings: ${settings}"
+	state.position = 0
 	init()
 }
 
@@ -62,8 +63,7 @@ def init() {
     subscribe(location, "mode", moveHandler)
 	subscribe(presence, "presence", moveHandler)
 	subscribe(presence, "presence", presenceHandler)
-	state.position = 0
-	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentPresence}}"
+	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentPresence}} & position = ${state.position}"
 }
 
 def modeHandler(evt) {
@@ -72,7 +72,7 @@ def modeHandler(evt) {
 
 def presenceHandler(evt) {
 	// handle presence mode changes
-	log.debug "presenceHandler:  people = ${presence.collect{it.label + ': ' + it.currentPresence}} and event = ${evt}"
+	//log.debug "presenceHandler:  people = ${presence.collect{it.label + ': ' + it.currentPresence}} and event = ${evt}"
 }
 
 def notificationHandler(msg) {
@@ -89,43 +89,43 @@ def notificationHandler(msg) {
 }
 
 def moveHandler(evt) {
-	log.debug "moveHandler: event = ${evt.value}."
+	camera?.ledAuto()
 	def nobodyHome = presence.find{it.currentPresence == "present"} == null
 	def somebodyHome = presence.find{it.currentPresence == "present"}
-	def wrongPosition = (state.position != newPosition)
-	log.debug "moveHandler: Presence -- nobodyHome = ${nobodyHome} & somebodyHome = ${somebodyHome}. wrongPosition = ${wrongPosition}"
-	camera?.ledAuto()
-	
-    if ((evt.value in stMode || somebodyHome) && wrongPosition) {
-        log.debug "moveHandler:  moving to position $newPosition & disabling alarm"
-    	camera?.alarmOff()
-		switch (newPosition) {
-		    case "1":
-		        camera?.preset1()
-		        break
-		    case "2":
-		        camera?.preset2()
-		        break
-		    case "3":
-		        camera?.preset3()
-		        break
-		    case "4":
-		        camera?.preset4()
-		        break
-		    case "5":
-		        camera?.preset5()
-		        break
-		    case "6":
-		        camera?.preset6()
-		        break
-		    default:
-		        camera?.preset1()
-				state.position = 1
-		} // end of switch	
-		state.position = newPosition
-		notificationHandler("${camera} is moving to position ${settings.newPosition} & alarm is off.")
-    } // end of handling no-one home
-    else {
+	def wrongPosition = true
+	log.debug "moveHandler: Presence -- nobodyHome = ${nobodyHome} & somebodyHome = ${somebodyHome}"
+    if (evt.value in stMode || somebodyHome) {
+		wrongPosition = (state.position != newPosition)
+		if (wrongPosition) {
+	        log.debug "moveHandler:  moving to position $newPosition & disabling alarm"
+	    	camera?.alarmOff()
+			switch (newPosition) {
+			    case "1":
+			        camera?.preset1()
+			        break
+			    case "2":
+			        camera?.preset2()
+			        break
+			    case "3":
+			        camera?.preset3()
+			        break
+			    case "4":
+			        camera?.preset4()
+			        break
+			    case "5":
+			        camera?.preset5()
+			        break
+			    case "6":
+			        camera?.preset6()
+			        break
+			    default:
+			        camera?.preset1()
+			} // end of switch	
+			state.position = newPosition
+			notificationHandler("${camera} is moving to position ${settings.newPosition} & alarm is off.")
+			} // end of handling wrongPosition
+    } // end of handling someone home
+    else if (!(evt.value in stMode) || nobodyHome) {	
 		wrongPosition = (state.position != origPosition)
 		if (wrongPosition) {
 	        log.debug "moveHandler:  Returning to position $origPosition & re-arming"
@@ -151,9 +151,9 @@ def moveHandler(evt) {
 			    default:
 			        camera?.preset1()
 			}
-	    	camera?.alarmOn()
-			notificationHandler("${camera} is moving to position ${settings.origPosition} & alarm is on.")
 			state.position = settings.origPosition
+			notificationHandler("${camera} is moving to position ${settings.origPosition} & alarm is on.")
+	    	camera?.alarmOn()
 		} // end of wrongPosition check
     }
 }
