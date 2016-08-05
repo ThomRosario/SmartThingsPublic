@@ -72,18 +72,15 @@ def modeHandler(evt) {
 
 def presenceHandler(evt) {
 	// handle presence mode changes
-	//log.debug "presenceHandler:  people = ${presence.collect{it.label + ': ' + it.currentPresence}} and event = ${evt}"
 }
 
 def notificationHandler(msg) {
 	// handle notifications
 	if (location.contactBookEnabled && recipients) {
-		//log.debug "Contact Book enabled!"
 	    sendNotificationToContacts(msg, recipients)
 	} 
     else if (phone) { 
     	// check that the user did select a phone number
-		//log.debug "Contact Book not enabled."
 	    sendSms(phone, msg)
 	}
 }
@@ -95,14 +92,9 @@ def moveHandler(evt) {
 	def privPresenceMode = !nobodyHome
 	def privHouseMode = location.mode in stMode
 	def privacyMode = privHouseMode && privPresenceMode
-	//log.debug "state.position = ${state.position} & privatePosition = ${privatePosition} & wrongPosition = ${wrongPosition}"
-    //log.debug "*** Event = ${evt.value} & privacy mode = ${privHouseMode && !nobodyHome}"
-	//log.debug "currentMode = ${location.mode}; stMode = ${stMode}; privHouseMode = ${privHouseMode}"
-	//log.debug "moveHandler: nobodyHome = ${nobodyHome}; !nobodyHome = ${!nobodyHome}; position = ${state.position}"
     if (privacyMode) {
     	camera?.alarmOff()
 		if (wrongPosition) {
-	        //log.debug "moveHandler:  moving to position $privatePosition & disabling alarm"
 			state.position = privatePosition
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
@@ -111,7 +103,6 @@ def moveHandler(evt) {
     	camera?.alarmOn()
 		wrongPosition = (state.position != alertPosition)
 		if (wrongPosition) {
-	        //log.debug "moveHandler:  Returning to position $alertPosition & re-arming"
 			state.position = alertPosition
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is on.")
 		} // end of wrongPosition check
