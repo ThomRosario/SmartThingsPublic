@@ -66,14 +66,6 @@ def init() {
 	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentPresence}} & position = ${state.position}"
 }
 
-def modeHandler(evt) {
-	// handle mode changes
-}
-
-def presenceHandler(evt) {
-	// handle presence mode changes
-}
-
 def notificationHandler(msg) {
 	// handle notifications
 	if (location.contactBookEnabled && recipients) {
@@ -88,25 +80,25 @@ def notificationHandler(msg) {
 def moveHandler(evt) {
 	camera?.ledAuto()
 	def nobodyHome = presence.find{it.currentPresence == "present"} == null
-	def wrongPosition = (state.position != privatePosition)
 	def privPresenceMode = !nobodyHome
 	def privHouseMode = location.mode in stMode
 	def privacyMode = privHouseMode && privPresenceMode
+	def wrongPosition = (state.position != privatePosition)
     if (privacyMode) {
     	camera?.alarmOff()
 		if (wrongPosition) {
 			state.position = privatePosition
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
-    } // end of handling someone home
+    }
     else {	
     	camera?.alarmOn()
 		wrongPosition = (state.position != alertPosition)
 		if (wrongPosition) {
 			state.position = alertPosition
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is on.")
-		} // end of wrongPosition check
-	} // end of else
+		}
+	}
 	
 	// now move
 	switch (state.position) {
