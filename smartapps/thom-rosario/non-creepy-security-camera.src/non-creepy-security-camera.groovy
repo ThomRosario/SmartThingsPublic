@@ -20,8 +20,7 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  TODO:  track what the alarm mode is at all times
- *         incorporate state.wrongPosition into motion, contact and reset handlers
+ *  TODO:  add motion sensor name to notifications
  */
 
 definition(
