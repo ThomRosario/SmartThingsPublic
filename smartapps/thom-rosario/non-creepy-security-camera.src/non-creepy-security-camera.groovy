@@ -121,7 +121,7 @@ def motionHandler(evt) {
     if ((evt.value == "active") && (location.mode in motionModes)) {
 		state.wrongPosition = (state.position != motionPreset)
 		log.debug ("motionHandler:  motion sensed while we're on alert. wrongPosition = ${state.wrongPosition}")
-		notificationHandler("Motion sensed: $evt.name:$evt.value:$evt.deviceId -- ${camera} is moving to position ${state.position}")
+		notificationHandler("Motion sensed: ${camera} is moving to position ${state.position}")
 		intruderHandler(motionPreset)
 	}
 }
@@ -195,17 +195,3 @@ def presetHandler() {
 	} // end of switch
 	log.debug ("presetHandler:  moved to preset ${state.position}")
 }
-
-/*
-	def resetHandler() {
-	state.position = returnPosition
-	if (state.origAlarmState) {
-		camera?.alarmOn()
-	} else {
-		camera?.alarmOff()
-	}
-	log.debug ("resetHandler: origAlarmState = ${state.origAlarmState} & returning to position ${state.position}")
-	notificationHandler("Resetting:  ${camera} is moving to position ${state.position}")
-	presetHandler()
-}
-*/
