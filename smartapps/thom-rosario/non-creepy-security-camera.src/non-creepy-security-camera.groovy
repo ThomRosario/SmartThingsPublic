@@ -111,17 +111,14 @@ def notificationHandler(msg) {
 def motionHandler(evt) {
     if ((evt.value == "active") && (location.mode in motionModes)) {
 		state.wrongPosition = (state.position != motionPreset)
-		log.debug ("motionHandler:  motion sensed while we're on alert. wrongPosition = ${state.wrongPosition}.")
-		/*
-		// Capture where the motion happened and send it via notification
 		def activeSensors = []
 		motion.each {sensor ->
 			if (sensor.currentMotion == "active") {
 				activeSensors << sensor.label
 			}
 		}
+		log.debug ("motionHandler:  Active sensors:  ${activeSensors}. wrongPosition = ${state.wrongPosition}.")
 		notificationHandler("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
-		*/
 		intruderHandler(motionPreset)
 	}
 }
@@ -129,39 +126,30 @@ def motionHandler(evt) {
 def contactHandler(evt) {
 	if ((evt.value == "open") && (location.mode in contactModes)) {
 		state.wrongPosition = (state.position != contactPreset)
-		log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
-		/*def openSensors = []
+		def openSensors = []
 		contact.each {sensor ->
 			if (sensor.currentContact == "open") {
 				openSensors << sensor.label
 			}
 		}
-		notificationHandler("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")*/
+		log.debug ("contactHandler:  Active sensors:  ${openSensors}. wrongPosition = ${state.wrongPosition}")
+		notificationHandler("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")
 		intruderHandler(contactPreset)
 	}
 }
 
 def intruderHandler (preset) {
-	log.debug "intruderHandler: request to go to preset ${preset}"
+	log.debug "intruderHandler: requesting preset ${preset}"
 	camera?.alarmOn()
 	if (state.wrongPosition) {
 		state.position = preset
 	}
 	presetHandler()
-	def activeSensors = []
-	contact.each {sensor ->
-		if (sensor.currentContact == "open") {
-			activeSensors << sensor.label
-		}
-	}
-	log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
-	notificationHandler("Active sensors:  ${activeSensors}.  ${camera} is moving to position ${state.position}")
 	runIn(alarmDuration*60, nonCreepyHandler)
-	log.debug ("intruderHandler:  camera armed and resetting in ${alarmDuration} minutes.")
+	log.debug ("intruderHandler:  ${camera} armed and resetting in ${alarmDuration} minutes.")
 }
 
 def nonCreepyHandler(evt) {
-	log.debug "nonCreepyHandler called."
 	state.nobodyHome = presence.find{it.currentPresence == "present"} == null
 	state.activatePrivacy = ((location.mode in nonCreepyModes) && !state.nobodyHome)
     if (state.activatePrivacy) {
@@ -170,6 +158,7 @@ def nonCreepyHandler(evt) {
 		state.wrongPosition = (state.position != nonCreepyPosition)
 		if (state.wrongPosition) {
 			state.position = nonCreepyPosition
+			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is off."
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
     }
@@ -179,6 +168,7 @@ def nonCreepyHandler(evt) {
 		state.wrongPosition = (state.position != returnPosition)
 		if (state.wrongPosition) {
 			state.position = returnPosition
+			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is on."
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is on.")
 		}
 	}
@@ -209,5 +199,5 @@ def presetHandler() {
 	    default:
 	        camera?.preset1()
 	} // end of switch
-	log.debug ("presetHandler:  moved to preset ${state.position}")
+	//log.debug ("presetHandler:  moved to preset ${state.position}")
 }
