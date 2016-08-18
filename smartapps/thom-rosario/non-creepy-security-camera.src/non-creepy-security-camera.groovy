@@ -38,14 +38,14 @@ preferences {
 	    section ("Which camera?") {
 			paragraph "These settings apply to all of the other sections in this app.  When the camera's alert, the motion and sound detection are active, and the camera will return to where it belongs, based on both the active SmartThings mode and the presence sensors you've specified.  This app relies upon Foscam's built-in photo saving modes to get your images to you."
 			input ("camera", "capability.imageCapture", multiple: false, title:"Choose a camera.")
-			input ("alarmDuration", "number", title: "How many minutes should the camera remain alert?", required: false, defaultValue: "5")
+			input ("alarmDuration", "number", title: "How many minutes should the camera remain alert?", required: true, defaultValue: "5")
+			input ("returnPosition", "number", title: "Where should the camera return to after taking action?", required: true, defaultValue: "1")    
 		}
 		section ("Non-creepy Mode Settings") {
 			paragraph "This mode maintains your privacy by averting the camera's eye when you don't want it watching you.  If the conditions aren't met, it'll return to the position you've chosen."
 			input ("nonCreepyModes", "mode", multiple: true, title:"When this mode activates...")
 	        input "presence", "capability.presenceSensor", title: "...and these people are present...", required: false, multiple: true
 			input ("nonCreepyPosition", "number", title:"... move the camera to this privacy preset.", required: true, defaultValue: "3")
-			input ("returnPosition", "number", title: "Where should the camera return to after taking action?", required: true, defaultValue: "1")    
 		}
 	}
 	page (name: "intrusionPage", title: "Intrusion Settings", install: false, uninstall: false, nextPage: "appSettings") {
@@ -93,14 +93,8 @@ def updated() {
 def init() {
     subscribe(location, "mode", nonCreepyHandler)
 	subscribe(presence, "presence", nonCreepyHandler)
-	//subscribe(presence, "presence", nonCreepyHandler)
 	subscribe(contact, "contact", contactHandler)
 	subscribe(motion, "motion", motionHandler)
-	if (settings.alarmDuration) {
-		state.alarmDuration = settings.alarmDuration * 60
-	} else {
-		state.alarmDuration = 300
-	} 
 	nonCreepyHandler()
 	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentpresence}} & position = ${state.position}"
 }
@@ -114,43 +108,51 @@ def notificationHandler(msg) {
 	}
 }
 
-/*def modeHandler(evt) {
-}
-*/
 def motionHandler(evt) {
     if ((evt.value == "active") && (location.mode in motionModes)) {
 		state.wrongPosition = (state.position != motionPreset)
-		log.debug ("motionHandler:  motion sensed while we're on alert. wrongPosition = ${state.wrongPosition}")
-		notificationHandler("Motion sensed: ${camera} is moving to position ${state.position}")
+		log.debug ("motionHandler:  motion sensed while we're on alert. wrongPosition = ${state.wrongPosition}.")
+
+		// Capture where the motion happened and send it via notification
+		def activeSensors = []
+		motion.each {sensor ->
+			if (sensor.currentMotion == "active") {
+				activeSensors << sensor.label
+			}
+		}
+		notificationHandler("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
 		intruderHandler(motionPreset)
-		//people = ${people.collect{it.label + ': ' + it.currentPresence}  (use to get the label of the motion sensor)
-		/*
-		Can probably get the active sensor by using getting a list of the current sensors whose status = active from the 
-		list of sensors the user has chosen.
-		*/
 	}
 }
 
 def contactHandler(evt) {
 	if (location.mode in contactModes) {
 		state.wrongPosition = (state.position != contactPreset)
+		def activeSensors = []
+		contact.each {sensor ->
+			if (sensor.currentContact == "open") {
+				activeSensors << sensor.label
+			}
+		}
 		log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
-		notificationHandler("Contact event:  ${camera} is moving to position ${state.position}")
+		notificationHandler("Contact opened:  ${activeSensors}.  ${camera} is moving to position ${state.position}")
 		intruderHandler(contactPreset)
 	}
 }
 
 def intruderHandler (preset) {
+	log.debug "intruderHandler: request to go to preset ${preset}"
 	camera?.alarmOn()
 	if (state.wrongPosition) {
 		state.position = preset
-		presetHandler()
 	}
-	log.debug ("intruderHandler:  camera armed and resetting in ${state.alarmDuration} seconds.")
-	runIn(state.alarmDuration, nonCreepyHandler("intruder"))
+	presetHandler()
+	runIn(alarmDuration*60, nonCreepyHandler)
+	log.debug ("intruderHandler:  camera armed and resetting in ${alarmDuration} minutes.")
 }
 
 def nonCreepyHandler(evt) {
+	log.debug "nonCreepyHandler called."
 	state.nobodyHome = presence.find{it.currentPresence == "present"} == null
 	state.activatePrivacy = ((location.mode in nonCreepyModes) && !state.nobodyHome)
     if (state.activatePrivacy) {
