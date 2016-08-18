@@ -117,6 +117,7 @@ def motionHandler (evt) {
 		log.debug "motionHandler:  Active sensors:  ${activeSensors}. wrongPosition = ${state.wrongPosition}."
 		notificationHandler ("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
 		intruderHandler (motionPreset)
+		camera?.take()
 	}
 }
 
@@ -142,6 +143,7 @@ def intruderHandler (preset) {
 		state.position = preset
 	}
 	presetHandler ()
+	runIn (alarmDuration*10, snapHandler)
 	runIn (alarmDuration*60, nonCreepyHandler)
 	log.debug "intruderHandler:  ${camera} armed and resetting in ${alarmDuration} minutes."
 }
@@ -196,4 +198,8 @@ def presetHandler () {
 	    default:
 	        camera?.preset1 ()
 	}
+}
+
+def snapHandler() {
+	camera?.take()
 }
