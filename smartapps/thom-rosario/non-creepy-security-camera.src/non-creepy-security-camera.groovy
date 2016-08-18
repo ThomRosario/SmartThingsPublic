@@ -20,10 +20,10 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
- *  TODO:  add motion sensor name to notifications
+ *  TODO:  
  */
 
-definition(
+definition (
     name: "Non-Creepy Security Camera",
     namespace: "Thom Rosario",
     author: "Thom Rosario",
@@ -39,12 +39,11 @@ preferences {
 			paragraph "These settings apply to all of the other sections in this app.  When the camera's alert, the motion and sound detection are active, and the camera will return to where it belongs, based on both the active SmartThings mode and the presence sensors you've specified.  This app relies upon Foscam's built-in photo saving modes to get your images to you."
 			input ("camera", "capability.imageCapture", multiple: false, title:"Choose a camera.")
 			input ("alarmDuration", "number", title: "How many minutes should the camera remain alert?", required: true, defaultValue: "5")
-			//input ("returnPosition", "number", title: "Where should the camera return to after taking action?", required: true, defaultValue: "1")    
 		}
 		section ("Non-creepy Mode Settings") {
 			paragraph "This mode maintains your privacy by averting the camera's eye when you don't want it watching you.  If the conditions aren't met, it'll return to the position you've chosen."
 			input ("nonCreepyModes", "mode", multiple: true, title:"When this mode activates...")
-	        input "presence", "capability.presenceSensor", title: "...and these people are present...", required: false, multiple: true
+	        input ("presence", "capability.presenceSensor", title: "...and these people are present...", required: false, multiple: true)
 			input ("nonCreepyPosition", "number", title:"... move the camera to this privacy preset.", required: true, defaultValue: "3")
 		}
 	}
@@ -63,52 +62,50 @@ preferences {
 		}
 	}
     page (name: "appSettings", title: "Application Settings", install: true, uninstall: true) {
-	    section("Notification Settings") {
-			input("recipients", "contact", title: "Who should I notify?", required: false) {
-	            input "phone", "phone", title: "Send with text message (optional)",
-	                description: "Phone Number", required: false
-				}
+	    section ("Notification Settings") {
+			input ("recipients", "contact", title: "Who should I notify?", required: false) {
+	            input ("phone", "phone", title: "Send with text message (optional)", description: "Phone Number", required: false)
+			}
 		}
-        section([mobileOnly:true]) {
+        section ([mobileOnly:true]) {
             label title: "Assign a name", required: false
-            //mode title: "Set for specific mode(s)", required: false
         }
     }
 }
 
-def installed() {
+def installed () {
 	log.debug "Installed with settings: ${settings}"
 	state.position = 0
 	state.wrongPosition = true
 	state.origAlarmState = true
-	init()
+	init ()
 }
 
-def updated() {
+def updated () {
 	log.debug "Updated with settings: ${settings}"
-	unsubscribe()
-	init()
+	unsubscribe ()
+	init ()
 }
 
-def init() {
-    subscribe(location, "mode", nonCreepyHandler)
-	subscribe(presence, "presence", nonCreepyHandler)
-	subscribe(contact, "contact", contactHandler)
-	subscribe(motion, "motion", motionHandler)
-	nonCreepyHandler()
+def init () {
+    subscribe (location, "mode", nonCreepyHandler)
+	subscribe (presence, "presence", nonCreepyHandler)
+	subscribe (contact, "contact", contactHandler)
+	subscribe (motion, "motion", motionHandler)
+	nonCreepyHandler ()
 	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentpresence}} & position = ${state.position}"
 }
 
-def notificationHandler(msg) {
+def notificationHandler (msg) {
 	if (location.contactBookEnabled && recipients) {
 	    sendNotificationToContacts(msg, recipients)
 	} 
     else if (phone) { 
-	    sendSms(phone, msg)
+	    sendSms (phone, msg)
 	}
 }
 
-def motionHandler(evt) {
+def motionHandler (evt) {
     if ((evt.value == "active") && (location.mode in motionModes)) {
 		state.wrongPosition = (state.position != motionPreset)
 		def activeSensors = []
@@ -117,13 +114,13 @@ def motionHandler(evt) {
 				activeSensors << sensor.label
 			}
 		}
-		log.debug ("motionHandler:  Active sensors:  ${activeSensors}. wrongPosition = ${state.wrongPosition}.")
-		notificationHandler("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
-		intruderHandler(motionPreset)
+		log.debug "motionHandler:  Active sensors:  ${activeSensors}. wrongPosition = ${state.wrongPosition}."
+		notificationHandler ("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
+		intruderHandler (motionPreset)
 	}
 }
 
-def contactHandler(evt) {
+def contactHandler (evt) {
 	if ((evt.value == "open") && (location.mode in contactModes)) {
 		state.wrongPosition = (state.position != contactPreset)
 		def openSensors = []
@@ -132,38 +129,38 @@ def contactHandler(evt) {
 				openSensors << sensor.label
 			}
 		}
-		log.debug ("contactHandler:  Active sensors:  ${openSensors}. wrongPosition = ${state.wrongPosition}")
-		notificationHandler("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")
-		intruderHandler(contactPreset)
+		log.debug "contactHandler:  Active sensors:  ${openSensors}. wrongPosition = ${state.wrongPosition}"
+		notificationHandler ("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")
+		intruderHandler (contactPreset)
 	}
 }
 
 def intruderHandler (preset) {
 	log.debug "intruderHandler: requesting preset ${preset}"
-	camera?.alarmOn()
+	camera?.alarmOn ()
 	if (state.wrongPosition) {
 		state.position = preset
 	}
-	presetHandler()
-	runIn(alarmDuration*60, nonCreepyHandler)
-	log.debug ("intruderHandler:  ${camera} armed and resetting in ${alarmDuration} minutes.")
+	presetHandler ()
+	runIn (alarmDuration*60, nonCreepyHandler)
+	log.debug "intruderHandler:  ${camera} armed and resetting in ${alarmDuration} minutes."
 }
 
-def nonCreepyHandler(evt) {
+def nonCreepyHandler (evt) {
 	state.nobodyHome = presence.find{it.currentPresence == "present"} == null
 	state.activatePrivacy = ((location.mode in nonCreepyModes) && !state.nobodyHome)
     if (state.activatePrivacy) {
-    	camera?.alarmOff()
+    	camera?.alarmOff ()
 		state.origAlarmState = false
 		state.wrongPosition = (state.position != nonCreepyPosition)
 		if (state.wrongPosition) {
 			state.position = nonCreepyPosition
 			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is off."
-			notificationHandler("${camera} is moving to position ${state.position} & alarm is off.")
+			notificationHandler ("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
     }
     else {	
-    	camera?.alarmOn()
+    	camera?.alarmOn ()
 		state.origAlarmState = true
 		state.wrongPosition = (state.position != returnPosition)
 		if (state.wrongPosition) {
@@ -172,32 +169,31 @@ def nonCreepyHandler(evt) {
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is on.")
 		}
 	}
-	presetHandler()
+	presetHandler ()
 }
 
-def presetHandler() {
-	camera?.ledAuto()
+def presetHandler () {
+	camera?.ledAuto ()
 	switch (state.position) {
 	    case "1":
-	        camera?.preset1()
+	        camera?.preset1 ()
 	        break
 	    case "2":
-	        camera?.preset2()
+	        camera?.preset2 ()
 	        break
 	    case "3":
-	        camera?.preset3()
+	        camera?.preset3 ()
 	        break
 	    case "4":
-	        camera?.preset4()
+	        camera?.preset4 ()
 	        break
 	    case "5":
-	        camera?.preset5()
+	        camera?.preset5 ()
 	        break
 	    case "6":
-	        camera?.preset6()
+	        camera?.preset6 ()
 	        break
 	    default:
-	        camera?.preset1()
-	} // end of switch
-	//log.debug ("presetHandler:  moved to preset ${state.position}")
+	        camera?.preset1 ()
+	}
 }
