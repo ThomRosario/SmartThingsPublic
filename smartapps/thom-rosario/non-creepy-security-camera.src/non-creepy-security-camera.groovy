@@ -112,7 +112,7 @@ def motionHandler(evt) {
     if ((evt.value == "active") && (location.mode in motionModes)) {
 		state.wrongPosition = (state.position != motionPreset)
 		log.debug ("motionHandler:  motion sensed while we're on alert. wrongPosition = ${state.wrongPosition}.")
-
+		/*
 		// Capture where the motion happened and send it via notification
 		def activeSensors = []
 		motion.each {sensor ->
@@ -121,21 +121,22 @@ def motionHandler(evt) {
 			}
 		}
 		notificationHandler("Motion sensed on ${activeSensors}.  ${camera} is moving to preset ${state.position}")
+		*/
 		intruderHandler(motionPreset)
 	}
 }
 
 def contactHandler(evt) {
-	if (location.mode in contactModes) {
+	if ((evt.value == "open") && (location.mode in contactModes)) {
 		state.wrongPosition = (state.position != contactPreset)
-		def activeSensors = []
+		log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
+		/*def openSensors = []
 		contact.each {sensor ->
 			if (sensor.currentContact == "open") {
-				activeSensors << sensor.label
+				openSensors << sensor.label
 			}
 		}
-		log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
-		notificationHandler("Contact opened:  ${activeSensors}.  ${camera} is moving to position ${state.position}")
+		notificationHandler("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")*/
 		intruderHandler(contactPreset)
 	}
 }
@@ -147,6 +148,14 @@ def intruderHandler (preset) {
 		state.position = preset
 	}
 	presetHandler()
+	def activeSensors = []
+	contact.each {sensor ->
+		if (sensor.currentContact == "open") {
+			activeSensors << sensor.label
+		}
+	}
+	log.debug ("contactHandler:  contact opened or closed while we're on alert. wrongPosition = ${state.wrongPosition}")
+	notificationHandler("Active sensors:  ${activeSensors}.  ${camera} is moving to position ${state.position}")
 	runIn(alarmDuration*60, nonCreepyHandler)
 	log.debug ("intruderHandler:  camera armed and resetting in ${alarmDuration} minutes.")
 }
