@@ -39,7 +39,7 @@ preferences {
 			paragraph "These settings apply to all of the other sections in this app.  When the camera's alert, the motion and sound detection are active, and the camera will return to where it belongs, based on both the active SmartThings mode and the presence sensors you've specified.  This app relies upon Foscam's built-in photo saving modes to get your images to you."
 			input ("camera", "capability.imageCapture", multiple: false, title:"Choose a camera.")
 			input ("alarmDuration", "number", title: "How many minutes should the camera remain alert?", required: true, defaultValue: "5")
-			input ("returnPosition", "number", title: "Where should the camera return to after taking action?", required: true, defaultValue: "1")    
+			//input ("returnPosition", "number", title: "Where should the camera return to after taking action?", required: true, defaultValue: "1")    
 		}
 		section ("Non-creepy Mode Settings") {
 			paragraph "This mode maintains your privacy by averting the camera's eye when you don't want it watching you.  If the conditions aren't met, it'll return to the position you've chosen."
