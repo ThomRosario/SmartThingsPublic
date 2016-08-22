@@ -25,7 +25,8 @@
 
 definition (
     name: "Non-Creepy Security Camera",
-    namespace: "Thom Rosario",
+	parent: "The Burrow:Burrow Mode Commander",
+    namespace: "The Burrow",
     author: "Thom Rosario",
     category: "Safety & Security",
     description: "Using the Foscam Universal Device Handler created by skp19, this smart app moves your camera to a preset position based on different events.",
@@ -135,10 +136,11 @@ def contactHandler (evt) {
 		intruderHandler (contactPreset)
 	}
 }
-
+	
 def intruderHandler (preset) {
 	log.debug "intruderHandler: requesting preset ${preset}"
 	camera?.alarmOn ()
+	camera?.ledOn ()
 	if (state.wrongPosition) {
 		state.position = preset
 	}
@@ -153,6 +155,7 @@ def nonCreepyHandler (evt) {
 	state.activatePrivacy = ((location.mode in nonCreepyModes) && !state.nobodyHome)
     if (state.activatePrivacy) {
     	camera?.alarmOff ()
+		camera?.ledAuto ()
 		state.origAlarmState = false
 		state.wrongPosition = (state.position != nonCreepyPosition)
 		if (state.wrongPosition) {
@@ -163,6 +166,7 @@ def nonCreepyHandler (evt) {
     }
     else {	
     	camera?.alarmOn ()
+		camera?.ledAuto ()
 		state.origAlarmState = true
 		state.wrongPosition = (state.position != returnPosition)
 		if (state.wrongPosition) {
