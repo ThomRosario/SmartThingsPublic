@@ -25,8 +25,8 @@
 
 definition (
     name: "Non-Creepy Security Camera",
-	parent: "The Burrow:Burrow Mode Commander",
-    namespace: "The Burrow",
+	parent: "burrow:Smart Burrow",
+    namespace: "burrow",
     author: "Thom Rosario",
     category: "Safety & Security",
     description: "Using the Foscam Universal Device Handler created by skp19, this smart app moves your camera to a preset position based on different events.",

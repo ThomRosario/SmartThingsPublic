@@ -25,10 +25,10 @@
 
 definition (
     name: "Camera IR Modes",
-	parent: "The Burrow:Burrow Mode Commander",
-    namespace: "The Burrow",
+    namespace: "burrow",
     author: "Thom Rosario",
     category: "Safety & Security",
+	parent: "burrow:Smart Burrow",
     description: "Using the Foscam Universal Device Handler created by skp19, this smart app gives you mode-based control over your camera's IR sensor modes.",
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Solution/camera.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Solution/camera@2x.png"
