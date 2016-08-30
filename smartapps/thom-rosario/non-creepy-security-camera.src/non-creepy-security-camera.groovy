@@ -57,9 +57,10 @@ preferences {
 		}
 		section ("Contact Sensor Settings", hideable: true, hidden: false){
 			paragraph "This section allows you to monitor contact sensors (both open and close) during specific SmartThings modes."
-			input ("contact", "capability.contactSensor", multiple: true, title:"Which contact sensor?")
-			input ("contactPreset", "number", title:"Which preset should I take photos of?", required: false, defaultValue: "1")
-			input ("contactModes", "mode", multiple: true, title:"During which modes should I be on alert?")
+			input ("contact", "capability.contactSensor", multiple: true, title: "Which contact sensor?")
+			input ("lock", "capability.lock", multiple: true, title: "Which door lock?")
+			input ("contactPreset", "number", title: "Which preset should I take photos of?", required: false, defaultValue: "1")
+			input ("contactModes", "mode", multiple: true, title: "During which modes should I be on alert?")
 		}
 	}
     page (name: "appSettings", title: "Application Settings", install: true, uninstall: true) {
@@ -92,6 +93,7 @@ def init () {
     subscribe (location, "mode", nonCreepyHandler)
 	subscribe (presence, "presence", nonCreepyHandler)
 	subscribe (contact, "contact", contactHandler)
+	subscribe (lock, "locked", contactHandler)
 	subscribe (motion, "motion", motionHandler)
 	nonCreepyHandler ()
 	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentpresence}} & position = ${state.position}"
@@ -123,7 +125,7 @@ def motionHandler (evt) {
 }
 
 def contactHandler (evt) {
-	if ((evt.value == "open") && (location.mode in contactModes)) {
+	if (((evt.value == "open") || (evt.value == "unlocked") && (location.mode in contactModes)) {
 		state.wrongPosition = (state.position != contactPreset)
 		def openSensors = []
 		contact.each {sensor ->
