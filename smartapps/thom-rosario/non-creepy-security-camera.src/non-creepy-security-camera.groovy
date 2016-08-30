@@ -30,8 +30,8 @@ definition (
     author: "Thom Rosario",
     category: "Safety & Security",
     description: "Using the Foscam Universal Device Handler created by skp19, this smart app moves your camera to a preset position based on different events.",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Solution/camera.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Solution/camera@2x.png"
+    iconUrl: "http://cdn.device-icons.smartthings.com/Entertainment/entertainment9-icn.png",
+    iconX2Url: "http://cdn.device-icons.smartthings.com/Entertainment/entertainment9-icn@2x.png"
 )
 
 preferences {
@@ -163,6 +163,7 @@ def nonCreepyHandler (evt) {
 			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is off."
 			notificationHandler ("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
+		runIn (alarmDuration * 60, presetnHandler)
     }
     else {	
     	camera?.alarmOn ()
@@ -174,8 +175,8 @@ def nonCreepyHandler (evt) {
 			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is on."
 			notificationHandler("${camera} is moving to position ${state.position} & alarm is on.")
 		}
+		presetHandler ()
 	}
-	presetHandler ()
 }
 
 def presetHandler () {

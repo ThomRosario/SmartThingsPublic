@@ -24,8 +24,8 @@ definition (
     author: "Thom Rosario",
     category: "Convenience",
     description: "This app turns a switch on when people are present, and turns it off when no-one's home.",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Solution/camera.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Solution/camera@2x.png"
+    iconUrl: "http://cdn.device-icons.smartthings.com/Lighting/light10-icn.png",
+    iconX2Url: "http://cdn.device-icons.smartthings.com/Lighting/light10-icn@2x.png"
 )
 
 preferences {

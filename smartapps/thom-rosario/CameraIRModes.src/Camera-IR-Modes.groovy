@@ -30,8 +30,8 @@ definition (
     category: "Safety & Security",
 	parent: "burrow:Smart Burrow",
     description: "Using the Foscam Universal Device Handler created by skp19, this smart app gives you mode-based control over your camera's IR sensor modes.",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Solution/camera.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Solution/camera@2x.png"
+    iconUrl: "http://cdn.device-icons.smartthings.com/Entertainment/entertainment9-icn.png",
+    iconX2Url: "http://cdn.device-icons.smartthings.com/Entertainment/entertainment9-icn@2x.png"
 )
 
 preferences {
