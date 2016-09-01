@@ -58,7 +58,7 @@ preferences {
 		section ("Contact Sensor Settings", hideable: true, hidden: false){
 			paragraph "This section allows you to monitor contact sensors (both open and close) during specific SmartThings modes."
 			input ("contact", "capability.contactSensor", multiple: true, title: "Which contact sensor?")
-			input ("lock", "capability.lock", multiple: true, title: "Which door lock?")
+			input ("lock", "capability.lock", multiple: false, title: "Which door lock?", required: false)
 			input ("contactPreset", "number", title: "Which preset should I take photos of?", required: false, defaultValue: "1")
 			input ("contactModes", "mode", multiple: true, title: "During which modes should I be on alert?")
 		}
@@ -165,7 +165,7 @@ def nonCreepyHandler (evt) {
 			log.debug "nonCreepyHandler:  ${camera} is moving to position ${state.position} & alarm is off."
 			notificationHandler ("${camera} is moving to position ${state.position} & alarm is off.")
 		} 
-		runIn (alarmDuration * 60, presetnHandler)
+		runIn (alarmDuration * 60, presetHandler)
     }
     else {	
     	camera?.alarmOn ()
