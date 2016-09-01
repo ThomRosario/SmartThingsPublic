@@ -37,7 +37,7 @@ definition (
 preferences {
     section ("Which camera?") {
 		paragraph ("Pick the camera and modes where you'd like the IR mode to be disabled.  IR mode will change to automatic during other modes.")
-		input ("camera", "capability.imageCapture", multiple: false, title:"Choose a camera.")
+		input ("camera", "capability.imageCapture", multiple: true, title:"Choose a camera.")
 		input ("irOffModes", "mode", multiple: true, title:"When this mode activates...")
 	}
 }
