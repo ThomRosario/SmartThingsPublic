@@ -24,7 +24,6 @@
 
 definition(
     name: "Camera Snaps All Presets",
-	parent: "burrow:Smart Burrow",
     namespace: "burrow",
 	parent: "burrow:Smart Burrow",
     author: "Thom Rosario",
@@ -65,12 +64,13 @@ def initialize() {
 	subscribe(contactSensors, "contact.open", scheduleHandler)
 	state.shutterDelay = 2 // give the camera time to snap the photo before moving it again
 	state.i = 1
-	log.debug "initialize:  presetList = ${state.presetList}"
 }
 
 def scheduleHandler (evt) {
-	log.debug "scheduleHandler called: ${evt.value}"
+	log.debug "scheduleHandler called: state.i = ${state.i} ${evt}"
 	if (state.i <= numPresets) {
+		camera?.alarmOn ()
+		camera?.ledAuto ()
 		moveHandler(state.i)
 	}
 	else {
@@ -79,7 +79,7 @@ def scheduleHandler (evt) {
 }
 
 def moveHandler(preset) {
-	log.debug "moveHandler:  moving the camera.  state.presetNum = ${state.presetNum}"
+	log.debug "moveHandler:  moving the camera to $preset.  state.i = ${state.i}"
 	switch (preset) {
 	    case "0":
 	        // don't move; stay here.
@@ -106,16 +106,17 @@ def moveHandler(preset) {
 	        camera?.preset1()
 	}
 	if (state.i <= numPresets) {
-		runIn (camMoveDelay, snapHandler())
+		runIn (camMoveDelay, snapHandler)
 	}
 	else {
 		state.i = 1
+		camera?.alarmOff ()
 	}
-	log.debug "moveHandler:  state.presetIndex = ${state.presetIndex}"
 }
 
 def snapHandler() {
 	camera?.take()
 	state.i = state.i + 1
-	runIn(state.shutterDelay, scheduleHandler())
+	runIn (state.shutterDelay, scheduleHandler)
+	log.debug "snapHandler:  done.  state.i = ${state.i}"
 }

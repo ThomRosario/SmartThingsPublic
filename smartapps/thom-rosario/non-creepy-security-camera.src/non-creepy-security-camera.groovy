@@ -95,7 +95,7 @@ def init () {
 	subscribe (contact, "contact", contactHandler)
 	subscribe (lock, "locked", contactHandler)
 	subscribe (motion, "motion", motionHandler)
-	nonCreepyHandler ()
+	nonCreepyHandler (evt)
 	log.debug "init:  Current mode = ${location.mode}, people = ${presence.collect{it.label + ': ' + it.currentpresence}} & position = ${state.position}"
 }
 
@@ -122,6 +122,9 @@ def motionHandler (evt) {
 		intruderHandler (motionPreset)
 		camera?.take()
 	}
+	else {
+		runIn (alarmDuration, nonCreepyHandler (evt))
+	}
 }
 
 def contactHandler (evt) {
@@ -136,6 +139,9 @@ def contactHandler (evt) {
 		log.debug "contactHandler:  Active sensors:  ${openSensors}. wrongPosition = ${state.wrongPosition}"
 		notificationHandler ("Contact opened:  ${openSensors}.  ${camera} is moving to position ${state.position}")
 		intruderHandler (contactPreset)
+	}
+	else {
+		runIn (alarmDuration, nonCreepyHandler (evt))
 	}
 }
 	
