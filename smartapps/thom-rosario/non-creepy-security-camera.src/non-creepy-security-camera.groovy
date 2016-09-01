@@ -125,7 +125,7 @@ def motionHandler (evt) {
 }
 
 def contactHandler (evt) {
-	if (((evt.value == "open") || (evt.value == "unlocked") && (location.mode in contactModes)) {
+	if (((evt.value == "open") || (evt.value == "unlocked")) && (location.mode in contactModes)) {
 		state.wrongPosition = (state.position != contactPreset)
 		def openSensors = []
 		contact.each {sensor ->
