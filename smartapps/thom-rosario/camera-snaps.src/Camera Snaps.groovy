@@ -26,6 +26,7 @@ definition(
     name: "Camera Snaps All Presets",
 	parent: "burrow:Smart Burrow",
     namespace: "burrow",
+	parent: "burrow:Smart Burrow",
     author: "Thom Rosario",
     category: "Safety & Security",
     description: "Snap photos of Foscam preset positions whenever there's activity.",
