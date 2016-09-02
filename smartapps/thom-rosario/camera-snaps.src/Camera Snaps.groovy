@@ -67,19 +67,19 @@ def initialize() {
 }
 
 def scheduleHandler (evt) {
-	log.debug "scheduleHandler called: state.i = ${state.i} ${evt}"
+	//log.debug "scheduleHandler called: state.i = ${state.i} ${evt}"
 	if (state.i <= numPresets) {
 		camera?.alarmOn ()
 		camera?.ledAuto ()
-		moveHandler(state.i)
+		moveHandler (state.i)
 	}
 	else {
-		moveHandler(returnPosition)
+		moveHandler (returnPosition)
 	}
 }
 
-def moveHandler(preset) {
-	log.debug "moveHandler:  moving the camera to $preset.  state.i = ${state.i}"
+def moveHandler (preset) {
+	//log.debug "moveHandler:  moving the camera to $preset.  state.i = ${state.i}"
 	switch (preset) {
 	    case "0":
 	        // don't move; stay here.
@@ -110,7 +110,7 @@ def moveHandler(preset) {
 	}
 	else {
 		state.i = 1
-		camera?.alarmOff ()
+		camera?.alarmOn ()
 	}
 }
 
