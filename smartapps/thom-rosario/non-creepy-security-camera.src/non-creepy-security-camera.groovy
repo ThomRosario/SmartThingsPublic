@@ -46,6 +46,7 @@ preferences {
 			input ("nonCreepyModes", "mode", multiple: true, title:"When this mode activates...")
 	        input ("presence", "capability.presenceSensor", title: "...and these people are present...", required: false, multiple: true)
 			input ("nonCreepyPosition", "number", title:"... move the camera to this privacy preset.", required: true, defaultValue: "3")
+			input ("returnPosition", "number", title:"Return to this position when you want the camera to be alert.", required: true, defaultValue: "1")
 		}
 	}
 	page (name: "intrusionPage", title: "Intrusion Settings", install: false, uninstall: false, nextPage: "appSettings") {
@@ -101,7 +102,7 @@ def init () {
 
 def notificationHandler (msg) {
 	if (location.contactBookEnabled && recipients) {
-	    sendNotificationToContacts(msg, recipients)
+	    sendNotificationToContacts (msg, recipients)
 	} 
     else if (phone) { 
 	    sendSms (phone, msg)

@@ -34,34 +34,34 @@ definition(
 )
 
 preferences {
-	section("When this happens...") {
-		input("motionSensors", "capability.motionSensor", required: true, title: "... motion here", multiple: true)
-        input("contactSensors", "capability.contactSensor", title: "... or this sensor opens", required: false, multiple: true)
+	section ("When this happens...") {
+		input ("motionSensors", "capability.motionSensor", required: true, title: "... motion here", multiple: true)
+        input ("contactSensors", "capability.contactSensor", title: "... or this sensor opens", required: false, multiple: true)
 	}
-    section("Do this") {
-		input("camera", "capability.imageCapture", required: true, title: "Snap a photo on this camera...", multiple: true)
+    section ("Do this") {
+		input ("camera", "capability.imageCapture", required: true, title: "Snap a photo on this camera...", multiple: true)
 		input ("returnPosition", "number", title: "... and return the camera to this preset position.", required: true, defaultValue: "1")
 	}
-	section("Snap mode specifics") {
+	section ("Snap mode specifics") {
 		input ("camMoveDelay", "number", title: "Wait how many seconds between taking photos (no less than 5)?", required: false, defaultValue: "10")
 		input ("numPresets", "number", title: "How many preset positions should we snap (typically 3)?", required: true, defaultValue: "3")
 	}
 }
 
-def installed() {
+def installed () {
 	log.debug "Installed with settings: ${settings}"
 	initialize()
 }
 
-def updated() {
+def updated () {
 	log.debug "Updated with settings: ${settings}"
 	unsubscribe()
 	initialize()
 }
 
-def initialize() {
-	subscribe(motionSensors, "motion.active", scheduleHandler)
-	subscribe(contactSensors, "contact.open", scheduleHandler)
+def initialize () {
+	subscribe (motionSensors, "motion.active", scheduleHandler)
+	subscribe (contactSensors, "contact.open", scheduleHandler)
 	state.shutterDelay = 2 // give the camera time to snap the photo before moving it again
 	state.i = 1
 }
@@ -114,8 +114,8 @@ def moveHandler (preset) {
 	}
 }
 
-def snapHandler() {
-	camera?.take()
+def snapHandler () {
+	camera?.take ()
 	state.i = state.i + 1
 	runIn (state.shutterDelay, scheduleHandler)
 	log.debug "snapHandler:  done.  state.i = ${state.i}"
